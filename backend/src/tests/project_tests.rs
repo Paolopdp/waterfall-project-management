@@ -46,36 +46,6 @@ async fn setup_test_db() -> PgPool {
         .run(&pool)
         .await
         .expect("Failed to run migrations");
-    // // Ensure the table exists (assuming your migrations create the 'projects' table)
-    // sqlx::query!(
-    //     "CREATE TABLE IF NOT EXISTS projects (
-    //         id UUID PRIMARY KEY,
-    //         name VARCHAR(255) NOT NULL,
-    //         description TEXT,
-    //         start_date TIMESTAMP WITH TIME ZONE NOT NULL,
-    //         end_date TIMESTAMP WITH TIME ZONE NOT NULL,
-    //         status project_status NOT NULL,
-    //         budget DECIMAL NOT NULL,
-    //         client_id UUID,
-    //         created_at TIMESTAMP WITH TIME ZONE NOT NULL,
-    //         updated_at TIMESTAMP WITH TIME ZONE NOT NULL
-    //     )"
-    // )
-    // .execute(&pool)
-    // .await
-    // .expect("Failed to create projects table");
-
-    // // Define the project_status type if it doesn’t exist
-    // sqlx::query!(
-    //     "DO $$ BEGIN
-    //         CREATE TYPE project_status AS ENUM ('planning', 'development', 'testing', 'deployment', 'completed');
-    //     EXCEPTION
-    //         WHEN duplicate_object THEN NULL;
-    //     END $$;"
-    // )
-    // .execute(&pool)
-    // .await
-    // .expect("Failed to create project_status type");
 
     // Clear the table
     sqlx::query!("TRUNCATE projects CASCADE")
