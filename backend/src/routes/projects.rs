@@ -1,6 +1,8 @@
 use crate::errors::ServiceError;
 use crate::models::project::{Project, ProjectCreate, ProjectUpdate};
+use crate::models::user::UserRole;
 use crate::services::project_service::ProjectService;
+use crate::extractors::auth::AuthenticatedUser;
 use actix_web::{delete, get, post, put, web, HttpResponse};
 use sqlx::PgPool;
 use uuid::Uuid;
@@ -27,9 +29,18 @@ pub fn config(cfg: &mut web::ServiceConfig) {
     )
 )]
 #[get("")]
-async fn get_projects(db: web::Data<PgPool>) -> Result<HttpResponse, ServiceError> {
-    let projects = ProjectService::get_all(&db).await?;
-    Ok(HttpResponse::Ok().json(projects))
+async fn get_projects(
+    auth_user: AuthenticatedUser,
+    pool: web::Data<PgPool>
+) -> Result<HttpResponse, ServiceError> {
+    // Only allow certain roles to access this endpoint
+    match auth_user.role {
+        UserRole::Admin | UserRole::ProjectManager | UserRole::Developer => {
+            let projects = ProjectService::get_all(&pool).await?;
+            Ok(HttpResponse::Ok().json(projects))
+        },
+        _ => Err(ServiceError::Forbidden)
+    }
 }
 
 /// Get project by ID
@@ -71,16 +82,17 @@ async fn get_project(
 )]
 #[post("")]
 async fn create_project(
+    auth_user: AuthenticatedUser,
     project: web::Json<ProjectCreate>,
-    db: web::Data<PgPool>,
+    pool: web::Data<PgPool>
 ) -> Result<HttpResponse, ServiceError> {
-    // Validate the request body
-    project
-        .validate()
-        .map_err(|e| ServiceError::ValidationError(e.to_string()))?;
-
-    let new_project = ProjectService::create(project.into_inner(), &db).await?;
-    Ok(HttpResponse::Created().json(new_project))
+    match auth_user.role {
+        UserRole::Admin | UserRole::ProjectManager => {
+            let project = ProjectService::create(project.into_inner(), &pool).await?;
+            Ok(HttpResponse::Created().json(project))
+        },
+        _ => Err(ServiceError::Forbidden)
+    }
 }
 
 /// Update an existing project

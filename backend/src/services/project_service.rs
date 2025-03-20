@@ -1,6 +1,7 @@
 use chrono::Utc;
 use sqlx::PgPool;
 use uuid::Uuid;
+use validator::Validate;
 
 use crate::errors::ServiceError;
 use crate::models::project::{Project, ProjectCreate, ProjectStatus, ProjectUpdate};
@@ -57,6 +58,16 @@ impl ProjectService {
         new_project: ProjectCreate,
         pool: &PgPool,
     ) -> Result<Project, ServiceError> {
+        // Validate the project
+        new_project.validate()?;
+
+        // Additional validation for dates
+        if new_project.end_date <= new_project.start_date {
+            return Err(ServiceError::ValidationError(
+                "end date must be after start date".to_string(),
+            ));
+        }
+
         let now = Utc::now();
 
         let project = sqlx::query_as!(

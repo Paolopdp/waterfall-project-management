@@ -1,5 +1,5 @@
 use crate::errors::ServiceError;
-use crate::models::task::{Task, TaskCreate, TaskUpdate};
+use crate::models::task::{TaskCreate, TaskUpdate};
 use crate::services::task_service::TaskService;
 use actix_web::{delete, get, post, put, web, HttpResponse};
 use bigdecimal::BigDecimal;

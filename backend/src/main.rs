@@ -7,6 +7,7 @@ use std::env;
 mod api_docs;
 mod db;
 mod errors;
+mod extractors;
 mod models;
 mod routes;
 mod services;
@@ -25,7 +26,6 @@ async fn main() -> std::io::Result<()> {
         .await
         .expect("Failed to create pool");
 
-    // Esegui le migrazioni automaticamente all'avvio
     sqlx::migrate!("./db/migrations")
         .run(&db_pool)
         .await
