@@ -1,7 +1,37 @@
 {
-    "dashboardTitle": "Dashboard",
-    "activeProjects": "Projects",
-    "recentProjects": "Recent Projects",
-    "db": "Assigned Resources",
-    "pendingTasks": "Pending Tasks"
+    "tasks": {
+        "title": "Tasks",
+        "viewModes": {
+            "list": "List View",
+            "board": "Board View",
+            "gantt": "Gantt Chart"
+        },
+        "fields": {
+            "name": "Name",
+            "status": "Status",
+            "startDate": "Start Date",
+            "endDate": "End Date",
+            "progress": "Progress",
+            "assignedTo": "Assigned To",
+            "dependencies": "Dependencies"
+        },
+        "status": {
+            "pending": "Pending",
+            "in_progress": "In Progress",
+            "completed": "Completed",
+            "blocked": "Blocked"
+        }
+    },
+    "dashboardTitle": "Cruscotto",
+    "activeProjects": "Progetti",
+    "recentProjects": "Progetti Recenti",
+    "assignedResources": "Risorse Assegnate",
+    "pendingTasks": "Attività in Sospeso",
+    "common": {
+        "actions": "Actions",
+        "edit": "Edit",
+        "delete": "Delete",
+        "save": "Save",
+        "cancel": "Cancel"
+    }
 }

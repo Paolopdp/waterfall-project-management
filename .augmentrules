@@ -1,0 +1,13 @@
+project:
+  backend:
+    language: rust
+    framework: actix-web
+    patterns:
+      - service_layer
+      - repository_pattern
+  frontend:
+    language: typescript
+    framework: next.js
+    patterns:
+      - react_query
+      - i18n
