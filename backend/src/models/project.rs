@@ -15,6 +15,13 @@ fn validate_budget_min(value: &BigDecimal) -> Result<(), ValidationError> {
     Ok(())
 }
 
+fn validate_dates(project: &ProjectCreate) -> Result<(), ValidationError> {
+    if project.end_date <= project.start_date {
+        return Err(ValidationError::new("end date must be after start date"));
+    }
+    Ok(())
+}
+
 #[derive(Debug, Serialize, Deserialize, FromRow, ToSchema)]
 pub struct Project {
     #[schema(example = "550e8400-e29b-41d4-a716-446655440000")]
@@ -45,8 +52,7 @@ pub enum ProjectStatus {
 
 #[derive(Debug, Serialize, Deserialize, Validate, ToSchema)]
 pub struct ProjectCreate {
-    #[validate(length(min = 1, max = 255))]
-    #[schema(example = "ERP System Implementation")]
+    #[validate(length(min = 1, max = 255, message = "name length must be between 1 and 255"))]
     pub name: String,
     #[schema(example = "Implementation of a new ERP system for the company")]
     pub description: Option<String>,
