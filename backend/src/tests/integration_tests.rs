@@ -1,9 +1,11 @@
 #[cfg(test)]
 mod tests {
-    use actix_web::{test, App};
-    use crate::routes;
-    use crate::models::auth::LoginCredentials;
+    use crate::models::auth::{AuthResponse, LoginCredentials};
     use crate::models::user::{UserCreate, UserRole};
+    use crate::routes;
+    use crate::tests::test_helpers::{cleanup_test_db, setup_test_db};
+    use actix_web::{test, web, App};
+    use serial_test::serial;
 
     async fn setup_test_app() -> impl actix_web::dev::Service<
         actix_http::Request,
@@ -20,6 +22,7 @@ mod tests {
     }
 
     #[actix_rt::test]
+    #[serial]
     async fn test_protected_endpoints() {
         let app = setup_test_app().await;
 

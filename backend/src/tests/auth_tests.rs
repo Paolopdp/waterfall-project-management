@@ -3,16 +3,11 @@ mod tests {
     use crate::models::auth::LoginCredentials;
     use crate::models::user::{UserCreate, UserRole};
     use crate::services::auth_service::AuthService;
+    use crate::tests::test_helpers::{cleanup_test_db, setup_test_db};
     use dotenv::dotenv;
     use serial_test::serial;
     use sqlx::PgPool;
     use std::env;
-
-    async fn setup_test_db() -> PgPool {
-        dotenv().ok();
-        let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
-        sqlx::PgPool::connect(&database_url).await.unwrap()
-    }
 
     #[actix_rt::test]
     #[serial]

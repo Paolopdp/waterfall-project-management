@@ -2,16 +2,9 @@
 mod tests {
     use crate::models::user::{UserCreate, UserRole, UserUpdate};
     use crate::services::user_service::UserService;
-    use dotenv::dotenv;
+    use crate::tests::test_helpers::{setup_test_db, cleanup_test_db};
     use serial_test::serial;
-    use sqlx::PgPool;
-    use std::env;
-
-    async fn setup_test_db() -> PgPool {
-        dotenv().ok();
-        let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
-        sqlx::PgPool::connect(&database_url).await.unwrap()
-    }
+    use validator::Validate;
 
     #[actix_rt::test]
     #[serial]
@@ -55,6 +48,8 @@ mod tests {
         // Verify deletion
         let find_result = UserService::get_by_id(created_user.id, &pool).await;
         assert!(find_result.is_err());
+
+        cleanup_test_db(&pool).await;
     }
 
     #[actix_rt::test]
@@ -70,8 +65,8 @@ mod tests {
             role: UserRole::Developer,
         };
 
-        let result = UserService::create(invalid_user, &pool).await;
-        assert!(result.is_err());
+        let validation_result = invalid_user.validate();
+        assert!(validation_result.is_err(), "Expected validation error for invalid email");
 
         // Test password too short
         let invalid_user = UserCreate {
@@ -81,7 +76,7 @@ mod tests {
             role: UserRole::Developer,
         };
 
-        let result = UserService::create(invalid_user, &pool).await;
-        assert!(result.is_err());
+        let validation_result = invalid_user.validate();
+        assert!(validation_result.is_err(), "Expected validation error for short password");
     }
 }

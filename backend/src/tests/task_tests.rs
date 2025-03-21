@@ -1,8 +1,12 @@
-#[cfg(test)]
 use crate::models::project::ProjectCreate;
-use crate::models::task::{TaskCreate, TaskStatus, TaskUpdate};
-use crate::services::project_service::ProjectService;
-use crate::services::task_service::TaskService;
+#[cfg(test)]
+use crate::models::task::TaskUpdate;
+use crate::tests::test_helpers::setup_test_db;
+use crate::{
+    models::task::{TaskCreate, TaskStatus},
+    services::{project_service::ProjectService, task_service::TaskService},
+    tests::test_helpers::cleanup_test_db,
+};
 use bigdecimal::{BigDecimal, FromPrimitive};
 use chrono::{Duration, Utc};
 use serial_test::serial;
@@ -11,51 +15,7 @@ use sqlx::{
     Executor, PgPool,
 };
 use uuid::Uuid;
-async fn setup_test_db() -> PgPool {
-    dotenv::dotenv().ok();
-    let database_url = std::env::var("DATABASE_URL_TEST").unwrap_or_else(|_| {
-        "postgres://postgres:postgres@localhost:5432/waterfall_manager".to_string()
-    });
 
-    // Connect to the default 'postgres' database to create the test database
-    let admin_url = "postgres://postgres:postgres@localhost:5432/postgres";
-    let admin_pool = PgPoolOptions::new()
-        .max_connections(5)
-        .connect(admin_url)
-        .await
-        .expect("Failed to connect to admin database");
-
-    // Create the test database if it doesn’t exist
-    admin_pool
-        .execute("CREATE DATABASE waterfall_manager_test;")
-        .await
-        .unwrap_or_else(|e| {
-            if e.to_string().contains("already exists") {
-                PgQueryResult::default()
-            } else {
-                panic!("Failed to create test database: {}", e);
-            }
-        });
-
-    // Connect to the test database
-    let pool = PgPoolOptions::new()
-        .max_connections(5)
-        .connect(&database_url)
-        .await
-        .expect("Failed to create test database pool");
-    sqlx::migrate!("./db/migrations")
-        .run(&pool)
-        .await
-        .expect("Failed to run migrations");
-
-    // Clear the table
-    sqlx::query!("TRUNCATE tasks CASCADE")
-        .execute(&pool)
-        .await
-        .expect("Failed to truncate test database");
-
-    pool
-}
 async fn create_test_project(pool: &PgPool) -> Uuid {
     let project = ProjectCreate {
         name: "Test Project".to_string(),

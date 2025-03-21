@@ -1,30 +1,15 @@
 #[cfg(test)]
 mod tests {
-    use dotenv::dotenv;
-    use std::env;
-
     use crate::models::project::{ProjectCreate, ProjectStatus, ProjectUpdate};
     use crate::services::project_service::ProjectService;
+    use crate::tests::test_helpers::{cleanup_test_db, setup_test_db};
     use bigdecimal::{BigDecimal, FromPrimitive};
     use chrono::{Duration, Utc};
     use serial_test::serial;
-    use sqlx::postgres::PgPoolOptions;
-    use sqlx::PgPool;
-
-    async fn setup_test_db() -> PgPool {
-        dotenv().ok();
-        let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
-        let pool = PgPoolOptions::new()
-            .max_connections(5)
-            .connect(&database_url)
-            .await
-            .unwrap();
-        pool
-    }
 
     #[actix_rt::test]
     #[serial]
-    async fn test_crud_operations() {
+    async fn test_project_crud_operations() {
         let pool = setup_test_db().await;
 
         // Test Create
@@ -70,6 +55,7 @@ mod tests {
         // Verify deletion
         let find_result = ProjectService::get_by_id(created_project.id, &pool).await;
         assert!(find_result.is_err());
+        cleanup_test_db(&pool).await;
     }
 
     #[actix_rt::test]

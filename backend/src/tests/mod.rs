@@ -1,8 +1,6 @@
-#[cfg(test)]
 pub mod auth_tests;
-#[cfg(test)]
+pub mod integration_tests;
 pub mod project_tests;
-#[cfg(test)]
 pub mod task_tests;
-#[cfg(test)]
+pub mod test_helpers;
 pub mod user_tests;
