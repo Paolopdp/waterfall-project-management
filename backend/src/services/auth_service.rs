@@ -53,7 +53,7 @@ impl AuthService {
             sub: user.id.to_string(),
             email: user.email.clone(),
             role: serde_json::to_string(&user.role)
-                .map_err(|e| ServiceError::InternalServerError)?,
+                .map_err(|_e| ServiceError::InternalServerError)?,
             exp: expiration,
         };
 
@@ -66,6 +66,7 @@ impl AuthService {
         Ok(AuthResponse {
             token,
             token_type: "Bearer".to_string(),
+            user_id: user.id,
         })
     }
 }

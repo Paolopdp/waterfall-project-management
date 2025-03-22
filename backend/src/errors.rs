@@ -29,9 +29,6 @@ pub enum ServiceError {
     #[error("Bad request: {0}")]
     BadRequest(String),
 
-    #[error("Unauthorized: {0}")]
-    Unauthorized(String),
-
     #[error("Validation error: {0}")]
     ValidationError(String),
 }
@@ -83,11 +80,6 @@ impl ResponseError for ServiceError {
             }),
             ServiceError::BadRequest(ref message) => {
                 HttpResponse::BadRequest().json(ErrorResponse {
-                    error: message.clone(),
-                })
-            }
-            ServiceError::Unauthorized(ref message) => {
-                HttpResponse::Unauthorized().json(ErrorResponse {
                     error: message.clone(),
                 })
             }

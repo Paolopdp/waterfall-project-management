@@ -45,23 +45,6 @@ impl UserService {
         Ok(user)
     }
 
-    pub async fn get_by_email(email: &str, pool: &PgPool) -> Result<User, ServiceError> {
-        let user = sqlx::query_as!(
-            User,
-            r#"
-            SELECT id, email, password_hash, full_name, role as "role: _", created_at, updated_at
-            FROM users
-            WHERE email = $1
-            "#,
-            email
-        )
-        .fetch_optional(pool)
-        .await?
-        .ok_or(ServiceError::NotFound("User not found".into()))?;
-
-        Ok(user)
-    }
-
     pub async fn update(id: Uuid, user: UserUpdate, pool: &PgPool) -> Result<User, ServiceError> {
         let current_user = Self::get_by_id(id, pool).await?;
 

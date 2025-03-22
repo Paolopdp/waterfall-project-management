@@ -19,7 +19,7 @@ pub struct User {
     pub updated_at: DateTime<Utc>,
 }
 
-#[derive(Debug, Serialize, Deserialize, sqlx::Type, ToSchema, PartialEq)]
+#[derive(Debug, Serialize, Deserialize, sqlx::Type, ToSchema, PartialEq, Clone)]
 #[sqlx(type_name = "user_role", rename_all = "snake_case")]
 pub enum UserRole {
     Admin,
@@ -28,7 +28,7 @@ pub enum UserRole {
     QaEngineer,
 }
 
-#[derive(Debug, Serialize, Deserialize, Validate, ToSchema)]
+#[derive(Debug, Serialize, Deserialize, Validate, ToSchema, Clone)]
 pub struct UserCreate {
     #[validate(email)]
     #[schema(example = "john.doe@example.com")]

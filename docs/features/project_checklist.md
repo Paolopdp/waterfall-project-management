@@ -61,13 +61,13 @@ This checklist covers all the major phases of the project—from initial setup t
 
 - [x] Develop endpoints for each project lifecycle phase:
   - [x] Tasks CRUD endpoints
-  - [ ] Requirements Analysis
-  - [ ] System & Software Design
-  - [ ] Implementation/Development
-  - [ ] Integration & Testing
-  - [ ] Deployment/Release
-  - [ ] Maintenance & Project Closure
-- [ ] Write integration tests for complete project lifecycle flow
+  - [x] Requirements Analysis
+  - [x] System & Software Design
+  - [x] Implementation/Development
+  - [x] Integration & Testing
+  - [x] Deployment/Release
+  - [x] Maintenance & Project Closure
+- [x] Write integration tests for complete project lifecycle flow
 
 ---
 

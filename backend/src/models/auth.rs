@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
-use validator::Validate;
 use utoipa::ToSchema;
+use validator::Validate;
 
 #[derive(Debug, Serialize, Deserialize, Validate, ToSchema)]
 pub struct LoginCredentials {
@@ -14,12 +14,13 @@ pub struct LoginCredentials {
 pub struct AuthResponse {
     pub token: String,
     pub token_type: String,
+    pub user_id: uuid::Uuid,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Claims {
-    pub sub: String,  // user id
+    pub sub: String, // user id
     pub email: String,
     pub role: String,
-    pub exp: usize,   // expiration time
+    pub exp: usize, // expiration time
 }

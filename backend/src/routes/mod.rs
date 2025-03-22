@@ -1,6 +1,7 @@
 use actix_web::web;
 
 pub mod auth;
+pub mod lifecycle;
 pub mod projects;
 pub mod resources;
 pub mod tasks;
@@ -13,6 +14,7 @@ pub fn config(cfg: &mut web::ServiceConfig) {
             .configure(projects::config)
             .configure(resources::config)
             .configure(tasks::config)
+            .configure(lifecycle::config)
             .configure(users::config),
     );
 }

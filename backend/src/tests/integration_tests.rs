@@ -1,9 +1,9 @@
 #[cfg(test)]
 mod tests {
-    use crate::models::auth::{AuthResponse, LoginCredentials};
+    use crate::models::auth::AuthResponse;
     use crate::models::user::{UserCreate, UserRole};
     use crate::routes;
-    use crate::tests::test_helpers::{cleanup_test_db, setup_test_db};
+    use crate::tests::test_helpers::setup_test_db;
     use actix_web::{test, web, App};
     use serial_test::serial;
 

@@ -97,7 +97,7 @@ async fn update_task_progress(
     db: web::Data<PgPool>,
 ) -> Result<HttpResponse, ServiceError> {
     let progress = progress.into_inner();
-    if progress < 0 || progress > 100 {
+    if !(0..=100).contains(&progress) {
         return Err(ServiceError::ValidationError(
             "Progress must be between 0 and 100".into(),
         ));

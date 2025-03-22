@@ -6,8 +6,7 @@ use std::env;
 use crate::models::{auth::Claims, user::UserRole};
 
 pub struct AuthenticatedUser {
-    pub user_id: String,
-    pub email: String,
+    pub user_id: uuid::Uuid,
     pub role: UserRole,
 }
 
@@ -46,8 +45,7 @@ impl FromRequest for AuthenticatedUser {
         let role: UserRole = serde_json::from_str(&claims.role).unwrap_or(UserRole::Developer);
 
         ready(Ok(AuthenticatedUser {
-            user_id: claims.sub,
-            email: claims.email,
+            user_id: uuid::Uuid::parse_str(&claims.sub).unwrap(),
             role,
         }))
     }

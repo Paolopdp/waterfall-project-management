@@ -3,11 +3,8 @@ mod tests {
     use crate::models::auth::LoginCredentials;
     use crate::models::user::{UserCreate, UserRole};
     use crate::services::auth_service::AuthService;
-    use crate::tests::test_helpers::{cleanup_test_db, setup_test_db};
-    use dotenv::dotenv;
+    use crate::tests::test_helpers::setup_test_db;
     use serial_test::serial;
-    use sqlx::PgPool;
-    use std::env;
 
     #[actix_rt::test]
     #[serial]
