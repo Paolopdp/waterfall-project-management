@@ -75,21 +75,21 @@ This checklist covers all the major phases of the project—from initial setup t
 
 ### A. Base Setup & Landing Page
 
-- [ ] Bootstrap a new Next.js project in `/frontend`.
-- [ ] Create a basic landing page that displays:
+- [x] Bootstrap a new Next.js project in `/frontend`.
+- [x] Create a basic landing page that displays:
   - "Welcome to the IT Waterfall Resource Manager"
 
 ### B. Core UI Components & API Integration
 
 - [x] Develop a project dashboard that:
   - [x] Fetches and displays a list of tasks from the backend
-- [ ] Create a form for submitting new project proposals
+- [x] Create a form for submitting new project proposals
 - [x] Implement API integration:
   - [x] Write services to call backend endpoints
-  - [ ] Manage JWT tokens for authentication
+  -  [x] Manage JWT tokens for authentication
   - [ ] Test the integration with CRUD endpoints
 - [ ] Write unit tests for UI components
-- [ ] Ensure smooth navigation between pages
+- [x] Ensure smooth navigation between pages
 
 ---
 

@@ -1,8 +1,8 @@
 use crate::errors::ServiceError;
+use crate::extractors::auth::AuthenticatedUser;
 use crate::models::project::{Project, ProjectCreate, ProjectUpdate};
 use crate::models::user::UserRole;
 use crate::services::project_service::ProjectService;
-use crate::extractors::auth::AuthenticatedUser;
 use actix_web::{delete, get, post, put, web, HttpResponse};
 use sqlx::PgPool;
 use uuid::Uuid;
@@ -31,15 +31,15 @@ pub fn config(cfg: &mut web::ServiceConfig) {
 #[get("")]
 async fn get_projects(
     auth_user: AuthenticatedUser,
-    pool: web::Data<PgPool>
+    pool: web::Data<PgPool>,
 ) -> Result<HttpResponse, ServiceError> {
     // Only allow certain roles to access this endpoint
     match auth_user.role {
         UserRole::Admin | UserRole::ProjectManager | UserRole::Developer => {
             let projects = ProjectService::get_all(&pool).await?;
             Ok(HttpResponse::Ok().json(projects))
-        },
-        _ => Err(ServiceError::Forbidden)
+        }
+        _ => Err(ServiceError::Forbidden),
     }
 }
 
@@ -84,14 +84,16 @@ async fn get_project(
 async fn create_project(
     auth_user: AuthenticatedUser,
     project: web::Json<ProjectCreate>,
-    pool: web::Data<PgPool>
+    pool: web::Data<PgPool>,
 ) -> Result<HttpResponse, ServiceError> {
+    // print user role
+    println!("User role: {:?}", auth_user.role);
     match auth_user.role {
         UserRole::Admin | UserRole::ProjectManager => {
             let project = ProjectService::create(project.into_inner(), &pool).await?;
             Ok(HttpResponse::Created().json(project))
-        },
-        _ => Err(ServiceError::Forbidden)
+        }
+        _ => Err(ServiceError::Forbidden),
     }
 }
 

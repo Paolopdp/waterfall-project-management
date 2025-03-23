@@ -32,6 +32,36 @@
         "edit": "Edit",
         "delete": "Delete",
         "save": "Save",
-        "cancel": "Cancel"
+        "cancel": "Cancel",
+        "loading": "Loading...",
+        "error": "Error loading data",
+        "tryAgain": "Please try again later",
+        "noDescription": "No description provided",
+        "submit": "Submit",
+        "submitting": "Submitting...",
+        "logout": "Logout"
+    },
+    "dashboard": {
+        "title": "Dashboard",
+        "totalProjects": "Total Projects",
+        "activeProjects": "Active Projects",
+        "completedProjects": "Completed Projects",
+        "onHoldProjects": "On Hold Projects"
+    },
+    "project": {
+        "create": "New Project",
+        "name": "Project Name",
+        "description": "Description",
+        "startDate": "Start Date",
+        "endDate": "End Date",
+        "budget": "Budget"
+    },
+    "validation": {
+        "required": "This field is required"
+    },
+    "navigation": {
+        "dashboard": "Dashboard",
+        "projects": "Projects",
+        "tasks": "Tasks"
     }
 }
