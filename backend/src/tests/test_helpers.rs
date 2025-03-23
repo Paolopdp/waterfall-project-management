@@ -43,7 +43,7 @@ pub async fn setup_test_db() -> PgPool {
 
 pub async fn cleanup_test_db(pool: &PgPool) {
     // Clean up all tables after tests
-    let tables = vec!["tasks", "projects", "resources", "users"];
+    let tables = vec!["replies", "threads", "tasks", "projects", "resources", "users"];
     for table in tables {
         let query = format!("TRUNCATE TABLE {} CASCADE", table);
         sqlx::query(&query)

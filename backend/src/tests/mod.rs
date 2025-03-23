@@ -1,4 +1,6 @@
 pub mod auth_tests;
+pub mod forum_tests;
+pub mod forum_integration_tests;
 pub mod integration_tests;
 pub mod lifecycle_tests;
 pub mod project_tests;

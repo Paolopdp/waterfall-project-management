@@ -45,7 +45,7 @@ async fn transition_phase(
 /// Get details for a specific phase
 #[get("/phase/{phase_id}")]
 async fn get_phase_details(
-    auth_user: AuthenticatedUser,
+    _auth_user: AuthenticatedUser,
     phase_id: web::Path<Uuid>,
     pool: web::Data<PgPool>,
 ) -> Result<HttpResponse, ServiceError> {
@@ -56,7 +56,7 @@ async fn get_phase_details(
 /// Get complete lifecycle history for a project
 #[get("/project/{project_id}")]
 async fn get_project_lifecycle(
-    auth_user: AuthenticatedUser,
+    _auth_user: AuthenticatedUser,
     project_id: web::Path<Uuid>,
     pool: web::Data<PgPool>,
 ) -> Result<HttpResponse, ServiceError> {

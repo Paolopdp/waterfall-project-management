@@ -39,7 +39,8 @@
         "noDescription": "No description provided",
         "submit": "Submit",
         "submitting": "Submitting...",
-        "logout": "Logout"
+        "logout": "Logout",
+        "sending": "Sending..."
     },
     "dashboard": {
         "title": "Dashboard",
@@ -62,6 +63,19 @@
     "navigation": {
         "dashboard": "Dashboard",
         "projects": "Projects",
-        "tasks": "Tasks"
+        "tasks": "Tasks",
+        "forum": "Forum",
+        "documents": "Documents"
+    },
+    "forum": {
+        "title": "Discussion Forum",
+        "newThread": "New Thread",
+        "searchPlaceholder": "Search threads...",
+        "thread": "Thread",
+        "author": "Author",
+        "replies": "Replies",
+        "lastReply": "Last Reply",
+        "writeReply": "Write your reply...",
+        "reply": "Post Reply"
     }
 }
