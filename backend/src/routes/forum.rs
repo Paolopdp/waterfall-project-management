@@ -16,7 +16,8 @@ pub fn config(cfg: &mut web::ServiceConfig) {
             .service(get_thread_replies)
             .service(search_threads)
             .service(create_tag)
-            .service(add_thread_tags),
+            .service(add_thread_tags)
+            .service(get_thread_by_id),
     );
 }
 
@@ -45,6 +46,23 @@ async fn get_threads(
     let forum_service = ForumService::new(pool.get_ref().clone());
 
     match forum_service.get_threads(pool.get_ref()).await {
+        Ok(threads) => Ok(HttpResponse::Ok().json(threads)),
+        Err(e) => Ok(HttpResponse::InternalServerError().json(e.to_string())),
+    }
+}
+
+#[get("/threads/{thread_id}")]
+async fn get_thread_by_id(
+    pool: web::Data<PgPool>,
+    thread_id: web::Path<uuid::Uuid>,
+    _: AuthenticatedUser,
+) -> Result<HttpResponse, actix_web::Error> {
+    let forum_service = ForumService::new(pool.get_ref().clone());
+
+    match forum_service
+        .get_thread_with_relations(thread_id.into_inner(), pool.get_ref())
+        .await
+    {
         Ok(threads) => Ok(HttpResponse::Ok().json(threads)),
         Err(e) => Ok(HttpResponse::InternalServerError().json(e.to_string())),
     }
