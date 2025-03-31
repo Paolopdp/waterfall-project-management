@@ -1,101 +1,114 @@
-import { useState } from 'react';
-import { useQuery } from 'react-query';
-import { useTranslation } from 'next-i18next';
-import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
+import { useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "react-query";
+import { useTranslation } from "next-i18next";
+import { serverSideTranslations } from "next-i18next/serverSideTranslations";
+import type { GetServerSideProps } from "next";
+import Head from "next/head";
+import { forumService } from "../../services/forum";
+import ThreadList from "../../components/forum/ThreadList";
+import ThreadForm from "../../components/forum/ThreadForm";
+import SearchBar from "../../components/forum/SearchBar";
+import TagFilter from "../../components/forum/TagFilter";
+import Card from "@/widgets/card";
 
-interface Thread {
-  id: string;
-  title: string;
-  author: string;
-  createdAt: string;
-  lastReply: string;
-  replyCount: number;
+interface ThreadSearchParams {
+  query?: string;
+  tags?: string[];
+  authorId?: string;
+  fromDate?: string;
+  toDate?: string;
+  limit?: number;
+  offset?: number;
 }
 
-export default function Forum() {
-  const { t } = useTranslation('common');
-  const [searchTerm, setSearchTerm] = useState('');
+export default function ForumPage() {
+  const { t } = useTranslation("common");
+  const queryClient = useQueryClient();
+  const [searchParams, setSearchParams] = useState<ThreadSearchParams>({
+    limit: 10,
+    offset: 0,
+  });
+  const [showNewThreadForm, setShowNewThreadForm] = useState(false);
 
-  const { data: threads, isLoading } = useQuery<Thread[]>('threads', async () => {
-    const response = await fetch('/api/forum/threads');
-    if (!response.ok) throw new Error('Network response was not ok');
-    return response.json();
+  const { data: threads, isLoading } = useQuery(
+    ["threads", searchParams],
+    () => forumService.searchThreads(searchParams),
+    {
+      keepPreviousData: true,
+    }
+  );
+
+  const { data: tags } = useQuery("forumTags", forumService.getTags);
+
+  const createThread = useMutation(forumService.createThread, {
+    onSuccess: () => {
+      queryClient.invalidateQueries("threads");
+      setShowNewThreadForm(false);
+    },
   });
 
+  const handleSearch = (newParams: Partial<ThreadSearchParams>) => {
+    setSearchParams((prev) => ({ ...prev, ...newParams, offset: 0 }));
+  };
+
+  const handleLoadMore = () => {
+    setSearchParams((prev) => ({
+      ...prev,
+      offset: (prev.offset || 0) + (prev.limit || 10),
+    }));
+  };
+
   return (
-    <div className="container mx-auto px-4">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">{t('forum.title')}</h1>
-        <button
-          className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
-          onClick={() => {/* TODO: Implement new thread creation */}}
-        >
-          {t('forum.newThread')}
-        </button>
-      </div>
+    <>
+      <Head>
+        <title>
+          {t("forum.title")} | {t("common.appName")}
+        </title>
+      </Head>
 
-      <div className="mb-4">
-        <input
-          type="text"
-          placeholder={t('forum.searchPlaceholder')}
-          className="w-full px-4 py-2 border rounded"
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-        />
-      </div>
-
-      {isLoading ? (
-        <div className="text-center py-4">Loading...</div>
-      ) : (
-        <div className="bg-white shadow rounded-lg">
-          <table className="min-w-full">
-            <thead>
-              <tr className="bg-gray-50">
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  {t('forum.thread')}
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  {t('forum.author')}
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  {t('forum.replies')}
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  {t('forum.lastReply')}
-                </th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {threads?.map((thread) => (
-                <tr key={thread.id} className="hover:bg-gray-50 cursor-pointer">
-                  <td className="px-6 py-4">
-                    <div className="text-sm font-medium text-gray-900">
-                      {thread.title}
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 text-sm text-gray-500">
-                    {thread.author}
-                  </td>
-                  <td className="px-6 py-4 text-sm text-gray-500">
-                    {thread.replyCount}
-                  </td>
-                  <td className="px-6 py-4 text-sm text-gray-500">
-                    {new Date(thread.lastReply).toLocaleDateString()}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+      <main className="container mx-auto px-4 py-8">
+        <div className="flex justify-between items-center mb-6">
+          <h1 className="text-3xl font-bold">{t("forum.title")}</h1>
+          <button
+            onClick={() => setShowNewThreadForm(true)}
+            className="btn btn-primary"
+          >
+            {t("forum.newThread")}
+          </button>
         </div>
-      )}
-    </div>
+
+        <Card className="mb-6">
+          <div className="space-y-4">
+            <SearchBar onSearch={(query) => handleSearch({ query })} />
+            <TagFilter
+              tags={tags || []}
+              onTagsChange={(tags) => handleSearch({ tags })}
+            />
+          </div>
+        </Card>
+
+        {showNewThreadForm && (
+          <ThreadForm
+            onSubmit={createThread.mutate}
+            onCancel={() => setShowNewThreadForm(false)}
+            tags={tags || []}
+          />
+        )}
+
+        <ThreadList
+          threads={threads || []}
+          isLoading={isLoading}
+          onLoadMore={handleLoadMore}
+        />
+      </main>
+    </>
   );
 }
 
-export async function getStaticProps({ locale }: { locale: string }) {
+export const getServerSideProps: GetServerSideProps = async ({ locale }) => {
   return {
     props: {
-      ...(await serverSideTranslations(locale, ['common'])),
+      ...(await serverSideTranslations(locale ?? "en", ["common"])),
     },
   };
-}
+};

@@ -3,21 +3,9 @@ import { useQuery, useMutation, useQueryClient } from 'react-query';
 import { useTranslation } from 'next-i18next';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import { useForm } from 'react-hook-form';
-
-interface Reply {
-  id: string;
-  content: string;
-  authorId: string;
-  createdAt: string;
-}
-
-interface Thread {
-  id: string;
-  title: string;
-  content: string;
-  authorId: string;
-  createdAt: string;
-}
+import { forumService } from '@/services/forum';
+import { formatDistance } from 'date-fns';
+import type { Thread, Reply } from '@/types/forum';
 
 export default function ThreadView() {
   const router = useRouter();
@@ -26,36 +14,28 @@ export default function ThreadView() {
   const queryClient = useQueryClient();
   const { register, handleSubmit, reset } = useForm();
 
+  // Get thread from React Query cache if available
+  const existingThread = queryClient.getQueryData<Thread>(['thread', id]);
+
+  // Only fetch thread if not in cache
   const { data: thread, isLoading: threadLoading } = useQuery<Thread>(
     ['thread', id],
-    async () => {
-      const response = await fetch(`/api/forum/threads/${id}`);
-      if (!response.ok) throw new Error('Network response was not ok');
-      return response.json();
-    },
-    { enabled: !!id }
+    () => forumService.getThread(id as string),
+    {
+      enabled: !!id && !existingThread,
+      initialData: existingThread
+    }
   );
 
   const { data: replies, isLoading: repliesLoading } = useQuery<Reply[]>(
     ['replies', id],
-    async () => {
-      const response = await fetch(`/api/forum/threads/${id}/replies`);
-      if (!response.ok) throw new Error('Network response was not ok');
-      return response.json();
-    },
+    () => forumService.getReplies(id as string),
     { enabled: !!id }
   );
 
   const createReply = useMutation(
-    async (data: { content: string }) => {
-      const response = await fetch(`/api/forum/threads/${id}/replies`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data),
-      });
-      if (!response.ok) throw new Error('Network response was not ok');
-      return response.json();
-    },
+    (data: { content: string }) =>
+      forumService.createReply(id as string, data.content),
     {
       onSuccess: () => {
         queryClient.invalidateQueries(['replies', id]);
@@ -64,16 +44,28 @@ export default function ThreadView() {
     }
   );
 
-  if (threadLoading || repliesLoading) {
-    return <div className="text-center py-4">Loading...</div>;
+  const formatCreatedAt = (date: string | null | undefined) => {
+    if (!date) return '';
+    try {
+      return formatDistance(new Date(date), new Date(), { addSuffix: true });
+    } catch (error) {
+      return '';
+    }
+  };
+
+  if (!thread || repliesLoading) {
+    return <div className="text-center py-4">{t('common.loading')}</div>;
   }
 
   return (
     <div className="container mx-auto px-4 py-6">
       <div className="mb-8">
-        <h1 className="text-2xl font-bold mb-4">{thread?.title}</h1>
+        <h1 className="text-2xl font-bold mb-4">{thread.title}</h1>
         <div className="bg-white rounded-lg shadow p-6">
-          <div className="prose max-w-none">{thread?.content}</div>
+          <div className="prose max-w-none">{thread.content}</div>
+          <div className="text-sm text-gray-500 mt-2">
+            {formatCreatedAt(thread.createdAt)}
+          </div>
         </div>
       </div>
 
@@ -84,7 +76,7 @@ export default function ThreadView() {
             <div key={reply.id} className="bg-white rounded-lg shadow p-4">
               <div className="prose max-w-none">{reply.content}</div>
               <div className="text-sm text-gray-500 mt-2">
-                {new Date(reply.createdAt).toLocaleString()}
+                {formatCreatedAt(reply.createdAt)}
               </div>
             </div>
           ))}
