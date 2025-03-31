@@ -37,34 +37,29 @@ impl ForumService {
         )
         .fetch_one(pool)
         .await?;
-        // Create a Thread with empty tags and attachments
-        let thread = Thread {
-            id: result.id,
-            title: result.title,
-            content: result.content,
-            author_id: result.author_id,
-            created_at: result.created_at,
-            updated_at: result.updated_at,
-            tags: None,
-            attachments: None,
-        };
 
-        Ok(thread)
+        // If there are tags, add them
+        if let Some(tag_ids) = thread.tag_ids {
+            self.add_thread_tags(result.id, tag_ids, pool).await?;
+        }
+
+        // Get the complete thread with relations
+        self.get_thread_with_relations(result.id, pool).await
     }
 
     pub async fn get_threads(&self, pool: &PgPool) -> Result<Vec<Thread>, ServiceError> {
-        let threads = sqlx::query_as!(
-            Thread,
+        let threads = sqlx::query_as::<_, Thread>(
             r#"
             SELECT t.id, t.title, t.content, t.author_id, t.created_at, t.updated_at,
-                COALESCE(NULLIF(ARRAY_AGG((ft.id, ft.name, ft.description, ft.created_at)),'{NULL}'), '{}') as "tags: Vec<ForumTag>",
-                  COALESCE(NULLIF( ARRAY_AGG((a.id, a.filename, a.content_type, a.size_bytes, a.uploaded_by, a.created_at)),'{NULL}'), '{}') as "attachments: Vec<ForumAttachment>"
-            FROM threads t LEFT JOIN thread_tags tt ON t.id = tt.thread_id
+                COALESCE(json_agg(DISTINCT ft) FILTER (WHERE ft.id IS NOT NULL), '[]') AS tags,
+                COALESCE(json_agg(DISTINCT a) FILTER (WHERE a.id IS NOT NULL), '[]') AS attachments
+            FROM threads t
+            LEFT JOIN thread_tags tt ON t.id = tt.thread_id
             LEFT JOIN forum_tags ft ON tt.tag_id = ft.id
             LEFT JOIN forum_attachments a ON t.id = a.thread_id
-            group by t.id
-            ORDER BY created_at DESC
-            "#
+            GROUP BY t.id
+            ORDER BY t.created_at DESC
+            "#,
         )
         .fetch_all(pool)
         .await?;
@@ -139,40 +134,66 @@ impl ForumService {
         pool: &PgPool,
     ) -> Result<Vec<Thread>, ServiceError> {
         let mut query = sqlx::QueryBuilder::new(
-            "SELECT DISTINCT t.id, t.title, t.content, t.author_id, t.created_at, t.updated_at
-             FROM threads t
-             LEFT JOIN thread_tags tt ON t.id = tt.thread_id
-             WHERE 1=1",
+            r#"
+            SELECT t.id, t.title, t.content, t.author_id, t.created_at, t.updated_at,
+                COALESCE(json_agg(DISTINCT ft) FILTER (WHERE ft.id IS NOT NULL), '[]') AS tags,
+                COALESCE(json_agg(DISTINCT a) FILTER (WHERE a.id IS NOT NULL), '[]') AS attachments
+            FROM threads t
+            LEFT JOIN thread_tags tt ON t.id = tt.thread_id
+            LEFT JOIN forum_tags ft ON tt.tag_id = ft.id
+            LEFT JOIN forum_attachments a ON t.id = a.thread_id
+            "#,
         );
 
-        // Before using params, take a reference to query
-        let query_str = params.query.as_ref();
-        if let Some(search) = query_str {
-            query
-                .push(" AND t.search_vector @@ plainto_tsquery(")
-                .push_bind(search)
-                .push(")");
+        let mut first_condition = true;
+
+        if let Some(search) = params.query.as_ref() {
+            query.push(if first_condition { " WHERE " } else { " AND " });
+            first_condition = false;
+            query.push("t.search_vector @@ plainto_tsquery(");
+            query.push_bind(search);
+            query.push(")");
         }
 
-        if let Some(tags) = &params.tags {
-            query
-                .push(" AND tt.tag_id = ANY(")
-                .push_bind(tags.clone())
-                .push("::uuid[])");
+        if let Some(tags) = params.tags.as_ref() {
+            if !tags.is_empty() {
+                query.push(if first_condition { " WHERE " } else { " AND " });
+                first_condition = false;
+                query.push("tt.tag_id = ANY(");
+                query.push_bind(tags.clone());
+                query.push(")");
+            }
         }
 
         if let Some(author) = params.author_id {
-            query.push(" AND t.author_id = ").push_bind(author);
+            query.push(if first_condition { " WHERE " } else { " AND " });
+            first_condition = false;
+            query.push("t.author_id = ");
+            query.push_bind(author);
         }
 
-        query
-            .push(" ORDER BY t.created_at DESC LIMIT ")
-            .push_bind(params.get_limit())
-            .push(" OFFSET ")
-            .push_bind(params.get_offset());
+        if let Some(from_date) = params.from_date {
+            query.push(if first_condition { " WHERE " } else { " AND " });
+            first_condition = false;
+            query.push("t.created_at >= ");
+            query.push_bind(from_date);
+        }
+
+        if let Some(to_date) = params.to_date {
+            query.push(if first_condition { " WHERE " } else { " AND " });
+            first_condition = false;
+            query.push("t.created_at <= ");
+            query.push_bind(to_date);
+        }
+
+        query.push(" GROUP BY t.id ");
+        query.push(" ORDER BY t.created_at DESC ");
+        query.push(" LIMIT ");
+        query.push_bind(params.get_limit());
+        query.push(" OFFSET ");
+        query.push_bind(params.get_offset());
 
         let threads = query.build_query_as::<Thread>().fetch_all(pool).await?;
-
         Ok(threads)
     }
 
@@ -222,20 +243,20 @@ impl ForumService {
         thread_id: Uuid,
         pool: &PgPool,
     ) -> Result<Thread, ServiceError> {
-        let thread = sqlx::query_as!(
-            Thread,
+        let thread = sqlx::query_as::<_, Thread>(
             r#"
-              SELECT t.id, t.title, t.content, t.author_id, t.created_at, t.updated_at,
-                COALESCE(NULLIF(ARRAY_AGG((ft.id, ft.name, ft.description, ft.created_at)),'{NULL}'), '{}') as "tags: Vec<ForumTag>",
-                  COALESCE(NULLIF( ARRAY_AGG((a.id, a.filename, a.content_type, a.size_bytes, a.uploaded_by, a.created_at)),'{NULL}'), '{}') as "attachments: Vec<ForumAttachment>"
-            FROM threads t LEFT JOIN thread_tags tt ON t.id = tt.thread_id
+            SELECT t.id, t.title, t.content, t.author_id, t.created_at, t.updated_at,
+                COALESCE(json_agg(DISTINCT ft) FILTER (WHERE ft.id IS NOT NULL), '[]') AS tags,
+                COALESCE(json_agg(DISTINCT a) FILTER (WHERE a.id IS NOT NULL), '[]') AS attachments
+            FROM threads t
+            LEFT JOIN thread_tags tt ON t.id = tt.thread_id
             LEFT JOIN forum_tags ft ON tt.tag_id = ft.id
             LEFT JOIN forum_attachments a ON t.id = a.thread_id
             WHERE t.id = $1
             GROUP BY t.id
             "#,
-            thread_id
         )
+        .bind(thread_id)
         .fetch_optional(pool)
         .await?
         .ok_or_else(|| ServiceError::NotFound("Thread not found".to_string()))?;

@@ -216,7 +216,8 @@ mod tests {
             .set_json(&thread_req)
             .to_request();
 
-        let _ = test::call_service(&app, req).await;
+        let insert = test::call_service(&app, req).await;
+        assert_eq!(insert.status(), 200);
 
         // Test search
         let req = test::TestRequest::get()
@@ -225,9 +226,12 @@ mod tests {
             .to_request();
 
         let resp = test::call_service(&app, req).await;
-        assert_eq!(resp.status(), 200);
-
+        println!("Hidden output");
+        // assert_eq!(resp.status(), 200);
+        // std::env::set_var("RUST_LOG", "sqlx=debug");
+        // env_logger::init_from_env("RUST_LOG");
         let search_results: Vec<Thread> = test::read_body_json(resp).await;
+        println!("{:#?}", search_results);
         assert_eq!(search_results.len(), 1);
         assert_eq!(search_results[0].title, "Searchable Thread");
     }

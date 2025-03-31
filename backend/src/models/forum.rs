@@ -4,7 +4,7 @@ use sqlx::{prelude::FromRow, Decode};
 use uuid::Uuid;
 use validator::Validate;
 
-#[derive(Debug, Serialize, Deserialize, Validate, sqlx::Type)]
+#[derive(Debug, Serialize, Deserialize, Validate, sqlx::FromRow)]
 pub struct ForumTag {
     pub id: Uuid,
     pub name: String,
@@ -12,7 +12,7 @@ pub struct ForumTag {
     pub created_at: DateTime<Utc>,
 }
 
-#[derive(Debug, Serialize, Deserialize, Validate, sqlx::Type)]
+#[derive(Debug, Serialize, Deserialize, Validate, sqlx::FromRow)]
 pub struct ForumAttachment {
     pub id: Uuid,
     pub filename: String,
@@ -68,7 +68,9 @@ pub struct Thread {
     pub author_id: Uuid,
     pub created_at: DateTime<Utc>,
     pub updated_at: DateTime<Utc>,
+    #[sqlx(json)]
     pub tags: Option<Vec<ForumTag>>,
+    #[sqlx(json)]
     pub attachments: Option<Vec<ForumAttachment>>,
 }
 

@@ -167,7 +167,11 @@ mod tests {
             .await
             .unwrap();
         let tag2 = forum_service
-            .create_tag("Feature".to_string(), Some("Feature requests".to_string()), &pool)
+            .create_tag(
+                "Feature".to_string(),
+                Some("Feature requests".to_string()),
+                &pool,
+            )
             .await
             .unwrap();
 
@@ -211,7 +215,11 @@ mod tests {
 
         // Create multiple threads
         let threads = vec![
-            ("Critical Bug", "System crashes on startup", vec![bug_tag.id]),
+            (
+                "Critical Bug",
+                "System crashes on startup",
+                vec![bug_tag.id],
+            ),
             ("Feature Discussion", "New feature ideas", vec![]),
             ("Another Bug", "Minor UI glitch", vec![bug_tag.id]),
         ];
@@ -238,8 +246,10 @@ mod tests {
             limit: Some(10),
             offset: Some(0),
         };
-
-        let results = forum_service.search_threads(search_params, &pool).await.unwrap();
+        let results = forum_service
+            .search_threads(search_params, &pool)
+            .await
+            .unwrap();
         assert_eq!(results.len(), 2);
         assert!(results.iter().any(|t| t.title == "Critical Bug"));
         assert!(results.iter().any(|t| t.title == "Another Bug"));
@@ -255,7 +265,10 @@ mod tests {
             offset: Some(0),
         };
 
-        let results = forum_service.search_threads(search_params, &pool).await.unwrap();
+        let results = forum_service
+            .search_threads(search_params, &pool)
+            .await
+            .unwrap();
         assert_eq!(results.len(), 2);
 
         // Test search by author
@@ -269,7 +282,10 @@ mod tests {
             offset: Some(0),
         };
 
-        let results = forum_service.search_threads(search_params, &pool).await.unwrap();
+        let results = forum_service
+            .search_threads(search_params, &pool)
+            .await
+            .unwrap();
         assert_eq!(results.len(), 3);
 
         // Test search with date range
@@ -283,7 +299,10 @@ mod tests {
             offset: Some(0),
         };
 
-        let results = forum_service.search_threads(search_params, &pool).await.unwrap();
+        let results = forum_service
+            .search_threads(search_params, &pool)
+            .await
+            .unwrap();
         assert_eq!(results.len(), 3);
     }
 
@@ -318,7 +337,10 @@ mod tests {
             offset: Some(0),
         };
 
-        let results = forum_service.search_threads(search_params, &pool).await.unwrap();
+        let results = forum_service
+            .search_threads(search_params, &pool)
+            .await
+            .unwrap();
         assert_eq!(results.len(), 2);
         assert_eq!(results[0].title, "Thread 5"); // Most recent first
         assert_eq!(results[1].title, "Thread 4");
@@ -334,7 +356,10 @@ mod tests {
             offset: Some(2),
         };
 
-        let results = forum_service.search_threads(search_params, &pool).await.unwrap();
+        let results = forum_service
+            .search_threads(search_params, &pool)
+            .await
+            .unwrap();
         assert_eq!(results.len(), 2);
         assert_eq!(results[0].title, "Thread 3");
         assert_eq!(results[1].title, "Thread 2");
